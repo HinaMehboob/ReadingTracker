@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Book } from "@/lib/types";
 import BookCard from "./BookCard";
 import AddBookModal from "./AddBookModal";
+import { FiBookOpen, FiClock, FiCheckCircle, FiSettings, FiPlus, FiGrid } from "react-icons/fi";
 
 interface BookListProps {
   books: Book[];
@@ -11,90 +12,77 @@ interface BookListProps {
 
 export default function BookList({ books, onUpdate, onRefresh }: BookListProps) {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState('all');
 
-  const handleBookUpdate = (updatedBook: Book) => {
-    onUpdate(updatedBook);
-  };
+  const filteredBooks = books.filter(book => {
+    if (activeTab === 'all') return true;
+    
+    const progress = book.readingProgress && book.totalPages > 0 
+      ? (book.readingProgress.currentPage / book.totalPages) * 100 
+      : 0;
 
-  const handleBookAdded = () => {
-    setIsAddModalOpen(false);
-    onRefresh();
-  };
+    if (activeTab === 'reading') return progress > 0 && progress < 100;
+    if (activeTab === 'to-read') return progress === 0;
+    if (activeTab === 'finished') return progress >= 100;
+    
+    return true;
+  });
 
   return (
-    <div>
-      <div className="flex justify-between items-center mb-8">
-        <h2 className="text-2xl font-bold text-white tracking-tight">My Library</h2>
-        <button
-          onClick={() => setIsAddModalOpen(true)}
-          className="px-5 py-2.5 bg-blue-600 shadow-lg shadow-blue-500/20 text-white text-sm font-bold rounded-lg hover:bg-blue-500 active:scale-95 transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-zinc-950 focus:ring-blue-500"
-        >
-          + Add Book
-        </button>
+    <div className="bg-[#191919] border border-[#2d2d2d] rounded-xl overflow-hidden flex flex-col h-full min-h-[600px]">
+      {/* Notion style tabs header */}
+      <div className="flex items-center justify-between px-4 py-3 border-b border-[#2d2d2d] overflow-x-auto scx">
+        <div className="flex space-x-1 shrink-0 pr-4">
+          <Tab icon={<FiGrid />} label="All Books" active={activeTab === 'all'} onClick={() => setActiveTab('all')} />
+          <Tab icon={<FiCheckCircle />} label="Finished Books" active={activeTab === 'finished'} onClick={() => setActiveTab('finished')} />
+          <Tab icon={<FiBookOpen />} label="Currently Reading" active={activeTab === 'reading'} onClick={() => setActiveTab('reading')} />
+          <Tab icon={<FiClock />} label="To Read Books" active={activeTab === 'to-read'} onClick={() => setActiveTab('to-read')} />
+        </div>
+        <div className="flex items-center justify-end flex-grow shrink-0 space-x-4 pl-4 sticky right-0 bg-[#191919] min-w-max pb-0.5">
+           <div className="flex text-[#a3a3a3] space-x-3">
+             <FiSettings size={14} className="hover:text-white cursor-pointer"/>
+           </div>
+           <button
+             onClick={() => setIsAddModalOpen(true)}
+             className="flex items-center space-x-1.5 px-3 py-1.5 bg-[#2563eb] text-white text-xs font-semibold rounded hover:bg-[#1d4ed8] transition-colors"
+           >
+             <span>Add New Book</span>
+             <FiPlus size={12} />
+           </button>
+        </div>
       </div>
 
-      {books.length === 0 ? (
-        <div className="text-center py-20 bg-zinc-900/50 rounded-2xl border-2 border-dashed border-zinc-800 backdrop-blur-sm">
-          <div className="mx-auto h-16 w-16 bg-zinc-800 rounded-full flex items-center justify-center mb-4">
-            <svg
-              className="h-8 w-8 text-zinc-500"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              aria-hidden="true"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="1.5"
-                d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
-              />
-            </svg>
+      {/* Grid Layout Content */}
+      <div className="p-6 flex-1 overflow-y-auto">
+        {filteredBooks.length > 0 ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
+            {filteredBooks.map(book => (
+              <BookCard key={book._id} book={book} onUpdate={onUpdate} onRefresh={onRefresh} />
+            ))}
           </div>
-          <h3 className="mt-2 text-lg font-bold text-zinc-200">Your library is empty</h3>
-          <p className="mt-2 text-sm font-medium text-zinc-500 max-w-sm mx-auto">Get started by adding your first book to track your reading journey.</p>
-          <div className="mt-8">
-            <button
-              type="button"
-              onClick={() => setIsAddModalOpen(true)}
-              className="inline-flex items-center px-6 py-3 border border-transparent shadow-lg shadow-blue-500/10 text-sm font-bold rounded-xl text-white bg-blue-600 hover:bg-blue-500 transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-zinc-900 focus:ring-blue-500"
-            >
-              <svg
-                className="-ml-1 mr-2 h-5 w-5"
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 20 20"
-                fill="currentColor"
-                aria-hidden="true"
-              >
-                <path
-                  fillRule="evenodd"
-                  d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z"
-                  clipRule="evenodd"
-                />
-              </svg>
-              Add Your First Book
-            </button>
+        ) : (
+          <div className="h-full flex flex-col items-center justify-center text-[#525252] min-h-[400px]">
+             <FiBookOpen size={48} className="mb-4 opacity-50" />
+             <p className="text-sm font-medium">No books found in this category.</p>
           </div>
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {books.map((book) => (
-            <div key={book._id} className="h-full">
-              <BookCard
-                book={book}
-                onUpdate={handleBookUpdate}
-                onRefresh={onRefresh}
-              />
-            </div>
-          ))}
-        </div>
-      )}
+        )}
+      </div>
 
-      <AddBookModal
-        isOpen={isAddModalOpen}
-        onClose={() => setIsAddModalOpen(false)}
-        onBookAdded={handleBookAdded}
-      />
+      <AddBookModal isOpen={isAddModalOpen} onClose={() => setIsAddModalOpen(false)} onBookAdded={onRefresh} />
     </div>
+  );
+}
+
+function Tab({ icon, label, active, onClick }: { icon: React.ReactNode, label: string, active: boolean, onClick: () => void }) {
+  return (
+    <button 
+      onClick={onClick}
+      className={`flex items-center space-x-2 px-3 py-1.5 rounded text-xs font-medium transition-colors shrink-0 ${
+        active ? 'bg-[#2d2d2d] text-[#f5f5f5]' : 'text-[#a3a3a3] hover:bg-[#2d2d2d] hover:text-[#d4d4d4]'
+      }`}
+    >
+      {icon}
+      <span>{label}</span>
+    </button>
   );
 }

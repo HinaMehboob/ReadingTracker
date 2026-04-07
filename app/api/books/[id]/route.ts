@@ -62,12 +62,16 @@ export async function PATCH(
     const bookId = resolvedParams.id;
     
     const body = await request.json();
-    const { status } = body;
+    const { status, description } = body;
 
-    // Update the book's status in Supabase
+    const updatePayload: any = { updatedAt: new Date().toISOString() };
+    if (status !== undefined) updatePayload.status = status;
+    if (description !== undefined) updatePayload.description = description;
+
+    // Update the book's attributes in Supabase
     const { data: updatedBook, error } = await supabase
       .from('books')
-      .update({ status, updatedAt: new Date().toISOString() })
+      .update(updatePayload)
       .eq('id', bookId)
       .eq('userId', session.user.id)
       .select()
@@ -111,7 +115,11 @@ export async function GET(
       return NextResponse.json({ error: 'Book not found' }, { status: 404 });
     }
 
-    return NextResponse.json({ ...book, ...{ _id: book.id } });
+    return NextResponse.json({ 
+      ...book, 
+      _id: book.id,
+      readingProgress: { currentPage: book.currentPage || 0 }
+    });
   } catch (error) {
     console.error('Internal Server Error:', error);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });

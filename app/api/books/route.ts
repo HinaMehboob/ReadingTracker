@@ -26,8 +26,12 @@ export async function GET() {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    // 4. Ensure frontend gets the array it expects
-    const formattedBooks = books?.map(b => ({ ...b, _id: b.id })) || [];
+    // 4. Ensure frontend gets the array it expects with spoofed readingProgress
+    const formattedBooks = books?.map(b => ({ 
+      ...b, 
+      _id: b.id, 
+      readingProgress: { currentPage: b.currentPage || 0 } 
+    })) || [];
 
     return NextResponse.json(formattedBooks);
   } catch (error) {

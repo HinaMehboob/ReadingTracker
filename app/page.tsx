@@ -1,28 +1,22 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useSession, signIn, signOut } from "next-auth/react";
-import { useRouter } from "next/navigation";
-import BookList from "@/components/BookList";
-import ReadingStats from "@/components/ReadingStats";
 import { Book } from "@/lib/types";
+import BookList from "@/components/BookList";
+import TrackerChart from "@/components/TrackerChart";
+import NotesSection from "@/components/NotesSection";
+import { useSession, signOut } from "next-auth/react";
+import { useRouter } from "next/navigation";
 
 export default function Home() {
   const { data: session, status } = useSession();
   const router = useRouter();
   const [books, setBooks] = useState<Book[]>([]);
-  const [stats, setStats] = useState({
-    totalBooks: 0,
-    completedBooks: 0,
-    pagesRead: 0,
-  });
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (status === "unauthenticated") {
       router.push("/auth/signin");
-    } else if (status === "authenticated") {
-      fetchBooks();
     }
   }, [status, router]);
 
@@ -34,7 +28,6 @@ export default function Home() {
       
       const data = await response.json();
       setBooks(data);
-      updateStats(data);
     } catch (error) {
       console.error("Error fetching books:", error);
     } finally {
@@ -42,65 +35,38 @@ export default function Home() {
     }
   };
 
-  const updateStats = (booksToStats: Book[]) => {
-    const completedBooks = booksToStats.filter(book => book.status === 'completed').length;
-    const pagesRead = booksToStats.reduce((total, book) => {
-      return total + (book.readingProgress?.currentPage || 0);
-    }, 0);
-
-    setStats({
-      totalBooks: booksToStats.length,
-      completedBooks,
-      pagesRead,
-    });
-  };
+  useEffect(() => {
+    if (status === "authenticated") {
+      fetchBooks();
+    }
+  }, [status]);
 
   const handleBookUpdate = (updatedBook: Book) => {
-    const updatedBooks = books.map(book => 
-      book._id === updatedBook._id ? updatedBook : book
-    );
-    setBooks(updatedBooks);
-    updateStats(updatedBooks);
+    setBooks(books.map(b => b._id === updatedBook._id ? updatedBook : b));
   };
 
   if (status === "loading" || loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-zinc-950 text-zinc-100">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+      <div className="flex h-screen items-center justify-center bg-[#111111]">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#a3a3a3]"></div>
       </div>
     );
   }
 
-  if (!session) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-zinc-950 text-zinc-100">
-        <div className="text-center p-8 bg-zinc-900 border border-zinc-800 rounded-xl shadow-2xl">
-          <h1 className="text-3xl font-bold mb-6 tracking-tight">Welcome to Reading Tracker</h1>
-          <button
-            onClick={() => signIn()}
-            className="px-6 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors shadow-lg shadow-blue-900/20"
-          >
-            Sign in to continue
-          </button>
-        </div>
-      </div>
-    );
-  }
+  if (!session) return null;
 
   return (
-    <main className="min-h-screen bg-zinc-950 text-zinc-100 pb-12">
-      <header className="bg-zinc-900 border-b border-zinc-800 shadow-sm sticky top-0 z-10">
-        <div className="max-w-7xl mx-auto py-5 px-4 sm:px-6 lg:px-8 flex justify-between items-center">
-          <h1 className="text-2xl font-black text-white tracking-tight flex items-center space-x-2">
-            <span className="bg-gradient-to-r from-blue-400 to-indigo-500 bg-clip-text text-transparent">Reading Tracker</span>
-          </h1>
-          <div className="flex items-center space-x-6">
-            <span className="text-sm font-medium text-zinc-400">
-              {session.user?.name}
-            </span>
+    <main className="min-h-screen bg-[#111111] text-[#e5e5e5] pb-24 font-sans selection:bg-blue-500/30 overflow-x-hidden">
+      <header className="border-b border-[#2d2d2d] bg-[#111111] sticky top-0 z-50 px-4 py-3">
+        <div className="max-w-[1700px] mx-auto flex justify-between items-center">
+          <div className="flex items-center space-x-2">
+            <h1 className="text-sm font-semibold tracking-tight text-[#e5e5e5]">Reading Tracker</h1>
+          </div>
+          <div className="flex items-center space-x-4">
+            <span className="text-xs text-[#a3a3a3]">{session.user?.name}</span>
             <button
               onClick={() => signOut()}
-              className="text-sm font-semibold text-zinc-400 hover:text-white transition-colors"
+              className="text-xs font-medium text-[#a3a3a3] hover:text-white transition-colors"
             >
               Sign out
             </button>
@@ -108,15 +74,29 @@ export default function Home() {
         </div>
       </header>
 
-      <div className="max-w-7xl mx-auto py-8 sm:px-6 lg:px-8">
-        <ReadingStats stats={stats} />
-        
-        <div className="mt-10">
-          <BookList 
-            books={books} 
-            onUpdate={handleBookUpdate} 
-            onRefresh={fetchBooks} 
-          />
+      <div className="max-w-[1700px] mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div className="mb-10 max-w-4xl">
+          <h1 className="text-[28px] font-bold text-white mb-3 tracking-tight">Reading Book Tracker</h1>
+          <p className="text-[13px] text-[#a3a3a3] leading-relaxed max-w-3xl">
+            Here I keep track of my reading progress. I update the <strong className="text-[#f5f5f5] font-semibold">pages read</strong> to see how much you've completed and what's left. Each book also has a space for notes and thoughts. Happy reading to me. I am capable of doing more than I know!!!
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 xl:grid-cols-4 gap-6 mb-8">
+          <div className="xl:col-span-3">
+            <BookList 
+              books={books} 
+              onUpdate={handleBookUpdate} 
+              onRefresh={fetchBooks} 
+            />
+          </div>
+          <div className="xl:col-span-1">
+            <TrackerChart books={books} />
+          </div>
+        </div>
+
+        <div className="mt-6">
+          <NotesSection books={books} onUpdate={handleBookUpdate} />
         </div>
       </div>
     </main>
