@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
-import { hashPassword } from '@/lib/auth';
 
 export async function POST(request: Request) {
   try {
@@ -14,44 +13,33 @@ export async function POST(request: Request) {
       );
     }
 
-    // Check if user already exists
-    const { data: existingUser } = await supabase
-      .from('users')
-      .select('email')
-      .eq('email', email)
-      .maybeSingle();
+    // Register with Supabase native Auth (handles confirmation emails natively)
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: {
+          name,
+        }
+      }
+    });
 
-    if (existingUser) {
+    if (error) {
+      console.error('Supabase Auth error:', error);
       return NextResponse.json(
-        { error: 'User already exists with this email' },
+        { error: error.message || 'Failed to create user in database.' },
         { status: 400 }
       );
     }
 
-    // Hash password and create user
-    const hashedPassword = await hashPassword(password);
-    
-    const { data: user, error } = await supabase
-      .from('users')
-      .insert([{ name, email, password: hashedPassword }])
-      .select()
-      .single();
-
-    if (error) {
-      console.error('Supabase write error:', error);
-      return NextResponse.json(
-        { error: 'Failed to create user in database.' },
-        { status: 500 }
-      );
-    }
-
+    // If email confirmation is enabled, user session won't be returned immediately
     return NextResponse.json({ 
-      message: 'User created successfully',
-      user: {
-        id: user.id,
-        name: user.name,
-        email: user.email,
-      }
+      message: 'User created successfully. Please confirm your email.',
+      user: data.user ? {
+        id: data.user.id,
+        email: data.user.email,
+        name: data.user.user_metadata?.name,
+      } : null
     });
   } catch (error) {
     console.error('Error during signup:', error);
@@ -61,3 +49,4 @@ export async function POST(request: Request) {
     );
   }
 }
+

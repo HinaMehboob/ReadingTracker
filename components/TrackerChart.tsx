@@ -52,7 +52,7 @@ export default function TrackerChart({ books }: { books: Book[] }) {
   }
 
   return (
-    <div className="flex flex-col space-y-6 h-full">
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 h-full">
       {/* Chart 1: Status */}
       <div className="bg-[#191919] border border-[#2d2d2d] rounded-xl p-6 relative flex flex-col min-h-[300px]">
         <div className="flex items-center space-x-2 text-[#a3a3a3] mb-6">

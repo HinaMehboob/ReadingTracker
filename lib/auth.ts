@@ -38,26 +38,24 @@ export const authOptions: NextAuthOptions = {
           throw new Error('Email and password are required');
         }
 
-        const { data: user, error } = await supabase
-          .from('users')
-          .select('*')
-          .eq('email', credentials.email)
-          .single();
+        const { data, error } = await supabase.auth.signInWithPassword({
+          email: credentials.email,
+          password: credentials.password
+        });
 
-        if (error || !user) {
-          throw new Error('No user found with this email');
+        if (error || !data.user) {
+          throw new Error(error?.message || 'No user found with this email');
         }
 
-        const isValid = await bcrypt.compare(credentials.password, user.password);
-
-        if (!isValid) {
-          throw new Error('Invalid password');
+        // Explicitly block users who haven't confirmed their email
+        if (!data.user.email_confirmed_at) {
+          throw new Error('Please confirm your email address before signing in.');
         }
 
         return { 
-          id: user.id.toString(), 
-          email: user.email, 
-          name: user.name 
+          id: data.user.id, 
+          email: data.user.email, 
+          name: data.user.user_metadata?.name || data.user.email
         };
       }
     }),

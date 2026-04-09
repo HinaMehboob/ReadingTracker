@@ -5,7 +5,9 @@ import { Book } from "@/lib/types";
 import BookList from "@/components/BookList";
 import TrackerChart from "@/components/TrackerChart";
 import NotesSection from "@/components/NotesSection";
-import { useSession, signOut } from "next-auth/react";
+import Sidebar from "@/components/Sidebar";
+import FeaturedBook from "@/components/FeaturedBook";
+import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 
 export default function Home() {
@@ -56,47 +58,49 @@ export default function Home() {
   if (!session) return null;
 
   return (
-    <main className="min-h-screen bg-[#111111] text-[#e5e5e5] pb-24 font-sans selection:bg-blue-500/30 overflow-x-hidden">
-      <header className="border-b border-[#2d2d2d] bg-[#111111] sticky top-0 z-50 px-4 py-3">
-        <div className="max-w-[1700px] mx-auto flex justify-between items-center">
-          <div className="flex items-center space-x-2">
-            <h1 className="text-sm font-semibold tracking-tight text-[#e5e5e5]">Reading Tracker</h1>
-          </div>
-          <div className="flex items-center space-x-4">
-            <span className="text-xs text-[#a3a3a3]">{session.user?.name}</span>
-            <button
-              onClick={() => signOut()}
-              className="text-xs font-medium text-[#a3a3a3] hover:text-white transition-colors"
-            >
-              Sign out
-            </button>
-          </div>
-        </div>
-      </header>
+    <main className="min-h-screen bg-[#111111] text-[#e5e5e5] pb-24 font-sans selection:bg-blue-500/30 overflow-x-hidden flex">
+      {/* Sidebar Layout */}
+      <Sidebar userName={session.user?.name} />
 
-      <div className="max-w-[1700px] mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="mb-10 max-w-4xl">
-          <h1 className="text-[28px] font-bold text-white mb-3 tracking-tight">Reading Book Tracker</h1>
-          <p className="text-[13px] text-[#a3a3a3] leading-relaxed max-w-3xl">
-            Here I keep track of my reading progress. I update the <strong className="text-[#f5f5f5] font-semibold">pages read</strong> to see how much you've completed and what's left. Each book also has a space for notes and thoughts. Happy reading to me. I am capable of doing more than I know!!!
-          </p>
-        </div>
+      {/* Main Content Pane */}
+      <div className="ml-64 flex-1">
+        <div className="max-w-[1400px] mx-auto px-8 lg:px-12 py-12 space-y-12">
+          
+          {/* Header Description */}
+          <div className="mb-2 max-w-4xl">
+            <h1 className="text-[28px] font-bold text-white mb-3 tracking-tight">Reading Book Tracker</h1>
+            <p className="text-[13px] text-[#a3a3a3] leading-relaxed max-w-3xl">
+              Here I keep track of my reading progress. I update the <strong className="text-[#f5f5f5] font-semibold">pages read</strong> to see how much you've completed and what's left. Each book also has a space for notes and thoughts. Happy reading to me. I am capable of doing more than I know!!!
+            </p>
+          </div>
 
-        <div className="grid grid-cols-1 xl:grid-cols-4 gap-6 mb-8">
-          <div className="xl:col-span-3">
+          <div id="library">
+             {/* Dynamic Featured Book */}
+             <FeaturedBook books={books} />
+          </div>
+
+          {/* Collections section - Full Width */}
+          <div id="collections">
+            <h2 className="text-xl font-bold text-white mb-4">Your Collections</h2>
             <BookList 
               books={books} 
               onUpdate={handleBookUpdate} 
               onRefresh={fetchBooks} 
             />
           </div>
-          <div className="xl:col-span-1">
+
+          {/* Analytics - Full Width, side by side internal grid */}
+          <div id="analytics" className="pt-4">
+            <h2 className="text-xl font-bold text-white mb-4">Reading Analytics</h2>
             <TrackerChart books={books} />
           </div>
-        </div>
 
-        <div className="mt-6">
-          <NotesSection books={books} onUpdate={handleBookUpdate} />
+          {/* Notes Section anchored at bottom */}
+          <div id="notes" className="pt-4">
+            <h2 className="text-xl font-bold text-white mb-4">Notes & Annotations</h2>
+            <NotesSection books={books} onUpdate={handleBookUpdate} />
+          </div>
+
         </div>
       </div>
     </main>

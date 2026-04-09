@@ -6,12 +6,14 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { FcGoogle } from 'react-icons/fc';
 import { BookOpen } from 'lucide-react';
+import { FiEye, FiEyeOff } from 'react-icons/fi';
 
 export default function SignInPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -44,8 +46,8 @@ export default function SignInPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-zinc-950 py-12 px-4 sm:px-6 lg:px-8 font-sans">
-      <div className="max-w-base w-full max-w-md space-y-8 bg-zinc-900 p-8 sm:p-10 rounded-2xl shadow-xl shadow-black/40 border border-zinc-800">
+    <div className="min-h-screen flex items-center justify-center bg-[#111111] py-12 px-4 sm:px-6 lg:px-8 font-sans">
+      <div className="max-w-base w-full max-w-md space-y-8 bg-[#191919] p-8 sm:p-10 rounded-2xl shadow-xl shadow-black/40 border border-[#2d2d2d]">
         <div className="flex flex-col items-center">
           <div className="bg-blue-600/10 p-3 rounded-xl border border-blue-500/20 mb-4 shadow-[0_0_20px_rgba(37,99,235,0.15)] flex h-14 w-14 items-center justify-center">
             <BookOpen className="w-7 h-7 text-blue-500" />
@@ -87,7 +89,7 @@ export default function SignInPage() {
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="appearance-none block w-full px-4 py-3 rounded-xl bg-zinc-950 border border-zinc-800 text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-blue-500/80 focus:border-blue-500/50 transition-all sm:text-sm shadow-inner"
+                className="appearance-none block w-full px-4 py-3 rounded-xl bg-[#111111] border border-[#2d2d2d] text-white placeholder-zinc-500 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition-all sm:text-sm shadow-inner"
                 placeholder="you@example.com"
                 disabled={isLoading}
               />
@@ -96,18 +98,27 @@ export default function SignInPage() {
               <label htmlFor="password" className="block text-sm font-medium text-zinc-300 pb-1.5 ml-1">
                 Password
               </label>
-              <input
-                id="password"
-                name="password"
-                type="password"
-                autoComplete="current-password"
-                required
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="appearance-none block w-full px-4 py-3 rounded-xl bg-zinc-950 border border-zinc-800 text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-blue-500/80 focus:border-blue-500/50 transition-all sm:text-sm shadow-inner"
-                placeholder="••••••••"
-                disabled={isLoading}
-              />
+              <div className="relative">
+                <input
+                  id="password"
+                  name="password"
+                  type={showPassword ? "text" : "password"}
+                  autoComplete="current-password"
+                  required
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="appearance-none block w-full pl-4 pr-12 py-3 rounded-xl bg-[#111111] border border-[#2d2d2d] text-white placeholder-zinc-500 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition-all sm:text-sm shadow-inner"
+                  placeholder="••••••••"
+                  disabled={isLoading}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute inset-y-0 right-0 pr-4 flex items-center text-zinc-500 hover:text-zinc-300 transition-colors"
+                >
+                  {showPassword ? <FiEyeOff size={18} /> : <FiEye size={18} />}
+                </button>
+              </div>
             </div>
           </div>
 
@@ -117,7 +128,7 @@ export default function SignInPage() {
                 id="remember-me"
                 name="remember-me"
                 type="checkbox"
-                className="h-4 w-4 rounded border-zinc-700 bg-zinc-900 text-blue-600 focus:ring-blue-500 focus:ring-offset-zinc-900 cursor-pointer"
+                className="h-4 w-4 rounded border-[#2d2d2d] bg-[#191919] text-blue-600 focus:ring-blue-500 cursor-pointer"
               />
               <label htmlFor="remember-me" className="ml-2 block text-sm text-zinc-400 cursor-pointer select-none">
                 Remember me
@@ -157,10 +168,10 @@ export default function SignInPage() {
         <div className="mt-8">
           <div className="relative">
             <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-zinc-800" />
+              <div className="w-full border-t border-[#2d2d2d]" />
             </div>
             <div className="relative flex justify-center text-sm">
-              <span className="px-4 bg-zinc-900 mb-0.5 text-zinc-500">Or continue with</span>
+              <span className="px-4 bg-[#191919] mb-0.5 text-[#a3a3a3]">Or continue with</span>
             </div>
           </div>
 
@@ -168,7 +179,7 @@ export default function SignInPage() {
             <button
               onClick={handleGoogleSignIn}
               type="button"
-              className="w-full flex items-center justify-center px-4 py-3.5 border border-zinc-700/80 rounded-xl shadow-sm bg-zinc-950/80 text-sm font-medium text-zinc-300 hover:bg-zinc-800 hover:text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-zinc-900 focus:ring-blue-500 transition-all active:scale-[0.98]"
+              className="w-full flex items-center justify-center px-4 py-3.5 border border-[#2d2d2d] rounded-xl shadow-sm bg-[#111111] text-sm font-medium text-zinc-300 hover:bg-[#1a1a1a] hover:text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all active:scale-[0.98]"
             >
               <FcGoogle className="h-5 w-5 mr-3 text-xl" />
               Sign in with Google
