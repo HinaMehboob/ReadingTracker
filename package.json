@@ -2,6 +2,10 @@
   "name": "reading-tracker",
   "version": "0.1.0",
   "private": true,
+  "browser": {
+    "canvas": false,
+    "encoding": false
+  },
   "scripts": {
     "dev": "next dev",
     "build": "next build",
