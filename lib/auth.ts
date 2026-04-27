@@ -1,4 +1,4 @@
-import { NextAuthOptions, DefaultUser } from 'next-auth';
+import { NextAuthOptions } from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import GoogleProvider from 'next-auth/providers/google';
 import bcrypt from 'bcryptjs';
@@ -6,22 +6,19 @@ import { supabase } from './supabase';
 
 declare module 'next-auth' {
   interface Session {
-    user: {
-      id: string;
+    user?: {
+      id?: string | null;
       name?: string | null;
       email?: string | null;
       image?: string | null;
     };
   }
 
-  interface User extends DefaultUser {
+  interface User {
     id: string;
-  }
-}
-
-declare module 'next-auth/jwt' {
-  interface JWT {
-    id: string;
+    name?: string | null;
+    email?: string | null;
+    image?: string | null;
   }
 }
 
@@ -68,7 +65,7 @@ export const authOptions: NextAuthOptions = {
     strategy: 'jwt',
   },
   callbacks: {
-    async jwt({ token, user, account }) {
+    async jwt({ token, user, account }: { token: any; user?: any; account?: any }) {
       // When a user logs in for the first time
       if (user) {
         token.id = user.id;
@@ -79,7 +76,7 @@ export const authOptions: NextAuthOptions = {
       }
       return token;
     },
-    async session({ session, token }) {
+    async session({ session, token }: { session: any; token: any }) {
       if (session.user) {
         // This line ensures session.user.id is NEVER undefined
         session.user.id = token.id || (token.sub as string);

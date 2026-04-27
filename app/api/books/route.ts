@@ -5,7 +5,7 @@ import { supabase } from '@/lib/supabase';
 
 export async function GET() {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await getServerSession(authOptions) as any;
     
     // 1. If session is missing, this returns 401
     if (!session?.user?.id) {
@@ -42,7 +42,7 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await getServerSession(authOptions) as any;
     
     // DEBUG LOG: Check your VS Code terminal for this!
     console.log("POST Request Session:", session);

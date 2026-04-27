@@ -26,7 +26,7 @@ export default function ReaderView() {
   
   // Note State
   const editorRef = useRef<HTMLDivElement>(null);
-  const [saveStatus, setSaveStatus] = useState<"Auto-saved" | "Saving..." | "">("");
+  const [saveStatus, setSaveStatus] = useState<"Auto-saved" | "Saving..." | "Error saving" | "">("");
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Chat State
@@ -314,6 +314,7 @@ export default function ReaderView() {
                     contentEditable
                     onInput={handleNoteInput}
                     suppressContentEditableWarning
+                    // @ts-expect-error - Custom placeholder CSS uses this attribute on div
                     placeholder="Type your insights here..."
                     className="rich-text-editor flex-1 overflow-y-auto p-5 text-sm text-[#d4d4d4] focus:outline-none leading-loose custom-scrollbar"
                   ></div>

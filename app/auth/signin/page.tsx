@@ -26,7 +26,7 @@ export default function SignInPage() {
         redirect: false,
         email,
         password,
-      });
+      }) as any;
 
       if (result?.error) {
         setError('Invalid email or password');
