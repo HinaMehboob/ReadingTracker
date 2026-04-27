@@ -24,6 +24,7 @@
     "bcryptjs": "^3.0.3",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "canvas": "npm:clsx@^2.1.1",
     "lucide-react": "^0.562.0",
     "mime-types": "^3.0.2",
     "next": "16.1.1",
