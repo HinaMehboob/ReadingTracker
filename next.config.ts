@@ -5,13 +5,7 @@ const nextConfig: NextConfig = {
     config.resolve.alias.canvas = false;
     return config;
   },
-  experimental: {
-    turbo: {
-      resolveAlias: {
-        canvas: './empty-module.ts',
-      },
-    },
-  },
+  serverExternalPackages: ['canvas'],
 };
 
 export default nextConfig;
