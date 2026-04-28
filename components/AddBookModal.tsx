@@ -1,7 +1,12 @@
 import { useState, useRef, useEffect } from 'react';
-import { FiX, FiUpload, FiBookOpen, FiMenu, FiSearch } from 'react-icons/fi';
+import { FiX, FiUpload, FiBookOpen, FiMenu, FiSearch, FiFileText } from 'react-icons/fi';
 import { supabase } from '@/lib/supabase';
 import { DEFAULT_GENRE_COLORS, getGenreColor } from '@/lib/colors';
+import { pdfjs } from 'react-pdf';
+
+if (typeof window !== 'undefined') {
+  pdfjs.GlobalWorkerOptions.workerSrc = 'https://unpkg.com/pdfjs-dist@5.4.296/build/pdf.worker.min.mjs';
+}
 
 interface AddBookModalProps {
   isOpen: boolean;
@@ -24,6 +29,8 @@ export default function AddBookModal({ isOpen, onClose, onBookAdded }: AddBookMo
   
   const [coverImage, setCoverImage] = useState<File | null>(null);
   const [bookFile, setBookFile] = useState<File | null>(null);
+  const [isCalculatedPages, setIsCalculatedPages] = useState(false);
+  const [isCalculating, setIsCalculating] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   
@@ -49,8 +56,25 @@ export default function AddBookModal({ isOpen, onClose, onBookAdded }: AddBookMo
     if (e.target.files && e.target.files[0]) setCoverImage(e.target.files[0]);
   };
 
-  const handleBookUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) setBookFile(e.target.files[0]);
+  const handleBookUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      setBookFile(file);
+      setIsCalculating(true);
+      setError('');
+      try {
+        const arrayBuffer = await file.arrayBuffer();
+        const pdf = await pdfjs.getDocument({ data: arrayBuffer }).promise;
+        setFormData(prev => ({ ...prev, totalPages: pdf.numPages.toString() }));
+        setIsCalculatedPages(true);
+      } catch (err) {
+        console.error("PDF parse error", err);
+        setError("Failed to read PDF. It might be corrupted or encrypted.");
+        setFormData(prev => ({ ...prev, totalPages: '' }));
+      } finally {
+        setIsCalculating(false);
+      }
+    }
   };
 
   const toggleGenre = (genre: string) => {
@@ -129,6 +153,7 @@ export default function AddBookModal({ isOpen, onClose, onBookAdded }: AddBookMo
       setSelectedGenres([]);
       setCoverImage(null);
       setBookFile(null);
+      setIsCalculatedPages(false);
       onBookAdded();
       onClose();
     } catch (err) {
@@ -194,24 +219,20 @@ export default function AddBookModal({ isOpen, onClose, onBookAdded }: AddBookMo
             </div>
 
             <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label htmlFor="totalPages" className="block text-sm font-medium text-[#a3a3a3] mb-1.5">
-                  Total Pages <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="number"
-                  id="totalPages"
-                  name="totalPages"
-                  value={formData.totalPages}
-                  onChange={handleChange}
-                  min="1"
-                  className="w-full px-4 py-2 bg-[#111111] border border-[#2d2d2d] rounded-xl text-white placeholder-zinc-600 focus:outline-none focus:border-blue-500"
-                  required disabled={isLoading} placeholder="250"
-                />
-              </div>
-
               <div className="relative" ref={dropdownRef}>
-                <label className="block text-sm font-medium text-[#a3a3a3] mb-1.5">Genres</label>
+                <label className="block text-sm font-medium text-[#a3a3a3] mb-1.5 flex items-center justify-between">
+                  <span>Genres</span>
+                  {isCalculatedPages && (
+                    <span className="text-xs text-emerald-400 flex items-center gap-1 font-semibold">
+                      <FiFileText size={10} /> {formData.totalPages} Pages Detected
+                    </span>
+                  )}
+                  {isCalculating && (
+                    <span className="text-xs text-blue-400 flex items-center gap-1 font-semibold animate-pulse">
+                      Analyzing PDF...
+                    </span>
+                  )}
+                </label>
                 <div 
                   onClick={() => !isLoading && setIsGenreOpen(true)}
                   className="w-full min-h-[42px] px-3 py-1.5 bg-[#111111] border border-[#2d2d2d] rounded-xl cursor-text flex flex-wrap gap-1.5 items-center"
@@ -325,7 +346,7 @@ export default function AddBookModal({ isOpen, onClose, onBookAdded }: AddBookMo
                 Cancel
               </button>
               <button
-                type="submit" disabled={isLoading}
+                type="submit" disabled={isLoading || isCalculating}
                 className="px-6 py-2 rounded-lg text-sm font-bold text-white bg-blue-600 hover:bg-blue-500 disabled:opacity-50 transition-all min-w-[100px] flex items-center justify-center"
               >
                 {isLoading ? <div className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div> : 'Add Book'}

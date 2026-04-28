@@ -1,54 +1,74 @@
 import { useState, useEffect } from "react";
-import { FiBook, FiGrid, FiPieChart, FiFileText, FiLogOut } from "react-icons/fi";
+import { FiBook, FiGrid, FiPieChart, FiFileText, FiLogOut, FiCompass } from "react-icons/fi";
 import { signOut } from "next-auth/react";
+import { usePathname, useRouter } from "next/navigation";
+import Link from "next/link";
 
 interface SidebarProps {
   userName?: string | null;
 }
 
 const navItems = [
-  { label: 'Library', id: 'library', icon: <FiBook /> },
-  { label: 'Collections', id: 'collections', icon: <FiGrid /> },
-  { label: 'Analytics', id: 'analytics', icon: <FiPieChart /> },
-  { label: 'Notes', id: 'notes', icon: <FiFileText /> },
+  { label: 'Library', id: 'library', path: '/', icon: <FiBook /> },
+  { label: 'Collections', id: 'collections', path: '/', icon: <FiGrid /> },
+  { label: 'Analytics', id: 'analytics', path: '/', icon: <FiPieChart /> },
+  { label: 'Notes', id: 'notes', path: '/', icon: <FiFileText /> },
+  { label: 'Explore', id: 'explore', path: '/explore', icon: <FiCompass /> },
 ];
 
 export default function Sidebar({ userName }: SidebarProps) {
   const [activeSection, setActiveSection] = useState('library');
+  const pathname = usePathname();
+  const router = useRouter();
 
   useEffect(() => {
+    if (pathname !== '/') {
+      if (pathname === '/explore') setActiveSection('explore');
+      return;
+    }
+
     const handleScroll = () => {
       let currentId = 'library';
       
       for (const item of navItems) {
+        if (item.path !== '/') continue;
         const section = document.getElementById(item.id);
         if (section) {
           const rect = section.getBoundingClientRect();
-          // Adjust threshold to detect which section is currently taking up the screen
           if (rect.top <= 200) {
             currentId = item.id;
           }
         }
       }
       
-      // Also check if we scrolled to the very bottom
       if ((window.innerHeight + window.scrollY) >= document.body.offsetHeight - 50) {
-        currentId = 'notes'; // The last section
+        currentId = 'notes';
       }
 
       setActiveSection(currentId);
     };
 
     window.addEventListener('scroll', handleScroll, { passive: true });
-    handleScroll(); // Initialize on mount
+    handleScroll();
     return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
+  }, [pathname]);
 
-  const scrollToSection = (id: string) => {
-    const element = document.getElementById(id);
-    if (element) {
-      element.scrollIntoView({ behavior: 'smooth' });
-      setActiveSection(id); // Optimistically set
+  const handleNavClick = (e: React.MouseEvent, item: any) => {
+    e.preventDefault();
+    if (item.path === '/explore') {
+      router.push('/explore');
+      return;
+    }
+
+    // Attempting to scroll on same page
+    if (pathname === '/') {
+      const element = document.getElementById(item.id);
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth' });
+        setActiveSection(item.id);
+      }
+    } else {
+      router.push(`/#${item.id}`);
     }
   };
 
@@ -63,9 +83,10 @@ export default function Sidebar({ userName }: SidebarProps) {
         {navItems.map((item) => {
           const isActive = activeSection === item.id;
           return (
-            <button
+            <a
               key={item.id}
-              onClick={() => scrollToSection(item.id)}
+              href={item.path === '/explore' ? '/explore' : `/#${item.id}`}
+              onClick={(e) => handleNavClick(e, item)}
               className={`w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg text-sm transition-all duration-300 border ${
                 isActive 
                   ? 'bg-[#1e1e1e] text-[#f5f5f5] font-semibold border-[#2d2d2d] shadow-sm' 
@@ -74,7 +95,7 @@ export default function Sidebar({ userName }: SidebarProps) {
             >
               <span className={isActive ? "text-[#10b981]" : "opacity-70"}>{item.icon}</span>
               <span>{item.label}</span>
-            </button>
+            </a>
           );
         })}
       </nav>
